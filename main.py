@@ -1,3 +1,4 @@
+from ctypes import sizeof
 import tkinter as tk
 
 
@@ -7,6 +8,33 @@ def leer_tablero(archivo):
         fila = list(linea.strip())
         tablero.append(fila)
     return tablero
+
+def comparar_fila(tablero, tablero_juego, i):
+    for j in range(len(tablero[0])):
+        if tablero[i][j] != tablero_juego[i][j]:
+            return False
+    return True
+
+def comparar_columna(tablero, tablero_juego, j):
+    for i in range(len(tablero)):
+        if tablero[i][j] != tablero_juego[i][j]:
+            return False
+    return True
+
+def onClick(event, tablero_juego, i, j, casilla, tablero):
+    if tablero_juego == tablero:
+        return
+
+    if tablero_juego[i][j] == "0":
+        tablero_juego[i][j] = "1"
+        event.widget.itemconfig(casilla, fill="black")
+    else:
+        tablero_juego[i][j] = "0"
+        event.widget.itemconfig(casilla, fill="white")
+    print(f"Celda actualizada a: {tablero_juego[i][j]}")
+
+    if tablero_juego == tablero:
+        ventana_final(event.widget.winfo_toplevel())
 
 
 TAMANO_CASILLA = 11
@@ -28,15 +56,28 @@ def contar_bloques_negros(celdas):
 
     return bloques
 
-def crear_tablero(tablero, FILAS, COLUMNAS):
+
+def generar_pistas(tablero):
+    filas = len(tablero)
+    columnas = len(tablero[0]) if filas else 0
+    return {
+        "filas": [
+            contar_bloques_negros(fila[:columnas]) for fila in tablero
+        ],
+        "columnas": [
+            contar_bloques_negros([tablero[fila][columna] for fila in range(filas)])
+            for columna in range(columnas)
+        ],
+    }
+
+
+def crear_tablero(tablero, tablero_juego, FILAS, COLUMNAS):
     ventana = tk.Tk()
     ventana.title("Tablero")
 
-    pistas_filas = [contar_bloques_negros(fila[:COLUMNAS]) for fila in tablero[:FILAS]]
-    pistas_columnas = [
-        contar_bloques_negros([tablero[fila][columna] for fila in range(FILAS)])
-        for columna in range(COLUMNAS)
-    ]
+    pistas = generar_pistas(tablero)
+    pistas_filas = pistas["filas"]
+    pistas_columnas = pistas["columnas"]
     max_pistas_filas = max((len(pista) for pista in pistas_filas), default=0)
     max_pistas_columnas = max((len(pista) for pista in pistas_columnas), default=0)
     origen_x = max_pistas_filas * TAMANO_CASILLA
@@ -68,9 +109,8 @@ def crear_tablero(tablero, FILAS, COLUMNAS):
             y1 = origen_y + fila * TAMANO_CASILLA
             x2 = x1 + TAMANO_CASILLA
             y2 = y1 + TAMANO_CASILLA
-            color = "white" if tablero[fila][columna] == "0" else "black"
-
-            tablero_canvas.create_rectangle(
+            color = "white"
+            casilla = tablero_canvas.create_rectangle(
                 x1,
                 y1,
                 x2,
@@ -79,7 +119,13 @@ def crear_tablero(tablero, FILAS, COLUMNAS):
                 outline="black",
                 width=1,
             )
-
+            tablero_canvas.tag_bind(
+                casilla,
+                "<Button-1>",
+                lambda event, i=fila, j=columna, item=casilla: onClick(
+                    event, tablero_juego, i, j, item, tablero
+                ),
+            )
     ventana.mainloop()
 
 
@@ -102,6 +148,12 @@ def ventana_inicial():
     ventana.mainloop()
     return seleccion.get()
 
+def ventana_final(ventana_juego):
+    ventana = tk.Toplevel(ventana_juego)
+    ventana.title("¡Felicidades!")
+    tk.Label(ventana, text="GANASTE!!!!1!!1!!!!!").pack(padx=20, pady=10)
+    tk.Button(ventana, text="Cerrar", command=ventana_juego.destroy).pack(pady=10)
+
 def main():
     select = ventana_inicial()
     print(select)
@@ -111,7 +163,10 @@ def main():
     archivo.close()
     FILAS = len(tablero)
     COLUMNAS = len(tablero[0]) if FILAS > 0 else 0
-    crear_tablero(tablero, FILAS, COLUMNAS)
-
+    tablero_juego = [[0 for _ in range(COLUMNAS)] for _ in range(FILAS)]
+    for i in range(FILAS):
+            for j in range(COLUMNAS):
+                tablero_juego[i][j] = "0"  
+    crear_tablero(tablero, tablero_juego, FILAS, COLUMNAS)
 
 main()
