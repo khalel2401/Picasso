@@ -1,6 +1,10 @@
-from ctypes import sizeof
 import tkinter as tk
+import Astrella as A
 
+
+matriz_pistas_filas = []
+matriz_pistas_columnas = []
+tablero_canvas_actual = None
 
 def leer_tablero(archivo):
     tablero = []
@@ -34,7 +38,28 @@ def onClick(event, tablero_juego, i, j, casilla, tablero):
     print(f"Celda actualizada a: {tablero_juego[i][j]}")
 
     if tablero_juego == tablero:
-        ventana_final(event.widget.winfo_toplevel())
+        ventana_final()
+
+def resolver_aestrella(matriz_pistas_filas, matriz_pistas_columnas, tablero_juego,tablero):
+    solucion = A.aestrella(matriz_pistas_filas, matriz_pistas_columnas)
+    if solucion is None:
+        return
+
+    solucion = [list(map(str, fila)) for fila in solucion]
+    casillas = [
+        item
+        for item in tablero_canvas_actual.find_all()
+        if tablero_canvas_actual.type(item) == "rectangle"
+    ]
+
+    tablero_juego[:] = solucion
+    celdas = (celda for fila in solucion for celda in fila)
+    for casilla, celda in zip(casillas, celdas):
+        tablero_canvas_actual.itemconfig(
+            casilla, fill="black" if celda == "1" else "white"
+        )
+    if tablero_juego == tablero:
+        ventana_final()
 
 
 TAMANO_CASILLA = 11
@@ -58,28 +83,29 @@ def contar_bloques_negros(celdas):
 
 
 def generar_pistas(tablero):
+    global matriz_pistas_filas, matriz_pistas_columnas
+
     filas = len(tablero)
     columnas = len(tablero[0]) if filas else 0
-    return {
-        "filas": [
-            contar_bloques_negros(fila[:columnas]) for fila in tablero
-        ],
-        "columnas": [
-            contar_bloques_negros([tablero[fila][columna] for fila in range(filas)])
-            for columna in range(columnas)
-        ],
-    }
+    matriz_pistas_filas = [
+        contar_bloques_negros(fila[:columnas]) for fila in tablero
+    ]
+    matriz_pistas_columnas = [
+        contar_bloques_negros([tablero[fila][columna] for fila in range(filas)])
+        for columna in range(columnas)
+    ]
+    return matriz_pistas_filas, matriz_pistas_columnas
 
 
 def crear_tablero(tablero, tablero_juego, FILAS, COLUMNAS):
+    global tablero_canvas_actual
+
     ventana = tk.Tk()
     ventana.title("Tablero")
 
-    pistas = generar_pistas(tablero)
-    pistas_filas = pistas["filas"]
-    pistas_columnas = pistas["columnas"]
-    max_pistas_filas = max((len(pista) for pista in pistas_filas), default=0)
-    max_pistas_columnas = max((len(pista) for pista in pistas_columnas), default=0)
+    generar_pistas(tablero)
+    max_pistas_filas = max((len(pista) for pista in matriz_pistas_filas), default=0)
+    max_pistas_columnas = max((len(pista) for pista in matriz_pistas_columnas), default=0)
     origen_x = max_pistas_filas * TAMANO_CASILLA
     origen_y = max_pistas_columnas * TAMANO_CASILLA
 
@@ -89,15 +115,16 @@ def crear_tablero(tablero, tablero_juego, FILAS, COLUMNAS):
         height=origen_y + FILAS * TAMANO_CASILLA,
         highlightthickness=0,
     )
+    tablero_canvas_actual = tablero_canvas
     tablero_canvas.pack(padx=10, pady=10)
 
-    for fila, pista in enumerate(pistas_filas):
+    for fila, pista in enumerate(matriz_pistas_filas):
         for indice, cantidad in enumerate(pista):
             x = origen_x - (len(pista) - indice - 0.5) * TAMANO_CASILLA
             y = origen_y + (fila + 0.5) * TAMANO_CASILLA
             tablero_canvas.create_text(x, y, text=str(cantidad), font=("Arial", 8))
 
-    for columna, pista in enumerate(pistas_columnas):
+    for columna, pista in enumerate(matriz_pistas_columnas):
         for indice, cantidad in enumerate(pista):
             x = origen_x + (columna + 0.5) * TAMANO_CASILLA
             y = origen_y - (len(pista) - indice - 0.5) * TAMANO_CASILLA
@@ -126,6 +153,13 @@ def crear_tablero(tablero, tablero_juego, FILAS, COLUMNAS):
                     event, tablero_juego, i, j, item, tablero
                 ),
             )
+
+    tk.Button(
+        ventana,
+        text="Resolver",
+        command=lambda: resolver_aestrella(matriz_pistas_filas, matriz_pistas_columnas,tablero_juego,tablero)
+    ).pack(pady=10)
+
     ventana.mainloop()
 
 
@@ -148,11 +182,11 @@ def ventana_inicial():
     ventana.mainloop()
     return seleccion.get()
 
-def ventana_final(ventana_juego):
-    ventana = tk.Toplevel(ventana_juego)
+def ventana_final():
+    ventana = tk.Toplevel()
     ventana.title("¡Felicidades!")
     tk.Label(ventana, text="GANASTE!!!!1!!1!!!!!").pack(padx=20, pady=10)
-    tk.Button(ventana, text="Cerrar", command=ventana_juego.destroy).pack(pady=10)
+    tk.Button(ventana, text="Cerrar").pack(pady=10)
 
 def main():
     select = ventana_inicial()
