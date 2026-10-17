@@ -1,6 +1,6 @@
 import tkinter as tk
 import Astrella as A
-
+import os
 
 matriz_pistas_filas = []
 matriz_pistas_columnas = []
@@ -187,18 +187,21 @@ def crear_tablero(tablero, tablero_juego, FILAS, COLUMNAS):
 def ventana_inicial():
     ventana = tk.Tk()
     ventana.title("Seleccionar tablero")
-    seleccion = tk.IntVar(value=0)
+    seleccion = tk.StringVar(value="")
 
-    def elegir_tablero(numero):
-        seleccion.set(numero)
+    def elegir_tablero(nombre):
+        seleccion.set(nombre)
         ventana.destroy()
 
-    for numero in range(1, 4):
+    tableros = os.listdir("./tableros")
+    
+    for tablero in tableros:
+        nombre_tablero = tablero.replace("tablero", "").replace(".txt", "")
         tk.Button(
             ventana,
-            text=f"Tablero {numero}",
-            command=lambda numero=numero: elegir_tablero(numero),
-        ).pack(padx=20, pady=10, fill="x")
+            text=f"Tablero {nombre_tablero}",
+            command=lambda nombre=nombre_tablero: elegir_tablero(nombre),
+        ).pack(pady=5)
 
     ventana.mainloop()
     return seleccion.get()
@@ -212,7 +215,7 @@ def ventana_final():
 def main():
     select = ventana_inicial()
     print(select)
-    archivo = open(f"tablero{select}.txt", "r")
+    archivo = open(f"./tableros/tablero{select}.txt", "r")
     print(f"Archivo seleccionado: tablero{select}.txt")
     tablero = leer_tablero(archivo)
     archivo.close()
