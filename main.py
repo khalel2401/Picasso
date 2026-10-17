@@ -108,15 +108,36 @@ def crear_tablero(tablero, tablero_juego, FILAS, COLUMNAS):
     max_pistas_columnas = max((len(pista) for pista in matriz_pistas_columnas), default=0)
     origen_x = max_pistas_filas * TAMANO_CASILLA
     origen_y = max_pistas_columnas * TAMANO_CASILLA
+    ancho_tablero = origen_x + COLUMNAS * TAMANO_CASILLA
+    alto_tablero = origen_y + FILAS * TAMANO_CASILLA
+    ancho_vista = min(ancho_tablero, ventana.winfo_screenwidth() - 100)
+    alto_vista = min(alto_tablero, ventana.winfo_screenheight() - 180)
 
+    marco_tablero = tk.Frame(ventana)
+    marco_tablero.pack(padx=10, pady=10, fill="both", expand=True)
+    marco_tablero.rowconfigure(0, weight=1)
+    marco_tablero.columnconfigure(0, weight=1)
     tablero_canvas = tk.Canvas(
-        ventana,
-        width=origen_x + COLUMNAS * TAMANO_CASILLA,
-        height=origen_y + FILAS * TAMANO_CASILLA,
+        marco_tablero,
+        width=ancho_vista,
+        height=alto_vista,
         highlightthickness=0,
+        scrollregion=(0, 0, ancho_tablero, alto_tablero),
     )
     tablero_canvas_actual = tablero_canvas
-    tablero_canvas.pack(padx=10, pady=10)
+    barra_horizontal = tk.Scrollbar(
+        marco_tablero, orient="horizontal", command=tablero_canvas.xview
+    )
+    barra_vertical = tk.Scrollbar(
+        marco_tablero, orient="vertical", command=tablero_canvas.yview
+    )
+    tablero_canvas.configure(
+        xscrollcommand=barra_horizontal.set,
+        yscrollcommand=barra_vertical.set,
+    )
+    tablero_canvas.grid(row=0, column=0, sticky="nsew")
+    barra_vertical.grid(row=0, column=1, sticky="ns")
+    barra_horizontal.grid(row=1, column=0, sticky="ew")
 
     for fila, pista in enumerate(matriz_pistas_filas):
         for indice, cantidad in enumerate(pista):
