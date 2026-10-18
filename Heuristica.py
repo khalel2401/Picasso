@@ -2,7 +2,6 @@ estado_inicial = ()
 
 def patrones(lenght, pistas):
     patrones = []
-    print(pistas)
 
     if not pistas:
             return [tuple([0] * lenght)]
@@ -73,3 +72,22 @@ def costo(estado):
 def es_estado_final(estado, total_filas):
     return total_filas - len(estado)
 
+def posibilidades_columnas(estado, candidatos_columnas):
+    filas_asignadas = len(estado)
+    posibilidades = 0
+
+    for columna, candidatos in enumerate(candidatos_columnas):
+        posibles = [
+            patron
+            for patron in candidatos
+            if all(
+                patron[fila] == estado[fila][columna]
+                for fila in range(filas_asignadas)
+            )
+        ]
+        posibilidades += len(posibles)
+
+    return posibilidades
+
+def heuristica(estado, total_filas, candidatos_columnas):
+    return es_estado_final(estado, total_filas) + posibilidades_columnas(estado, candidatos_columnas)

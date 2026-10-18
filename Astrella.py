@@ -26,29 +26,15 @@ def aestrella(pistas_fila, pistas_columna):
 
         if len(estado) == total_filas:
             return estado
-
+        
         for sucesor in H.generar_sucesores(estado, candidatos_filas, candidatos_columnas):
             if sucesor in visited:
                 continue
 
             visited.add(sucesor)
 
-            g = H.costo(sucesor)
-            h = H.es_estado_final(sucesor, total_filas)
-            f = g + h
-
-            flex = sum(
-                sum(
-                    all(
-                        patron[fila] == sucesor[fila][columna]
-                        for fila in range(len(sucesor))
-                    )
-                    for patron in candidatos
-                )
-                for columna, candidatos
-                in enumerate(candidatos_columnas)
-            )
+            f = H.heuristica(sucesor, total_filas, candidatos_columnas)
 
             heapq.heappush(tope, (f, contado, sucesor))
-
+            
     return None

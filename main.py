@@ -41,7 +41,16 @@ def onClick(event, tablero_juego, i, j, casilla, tablero):
         ventana_final()
 
 def resolver_aestrella(matriz_pistas_filas, matriz_pistas_columnas, tablero_juego,tablero):
+    inicio = os.times()
+    
     solucion = A.aestrella(matriz_pistas_filas, matriz_pistas_columnas)
+    
+    fin = os.times()
+    
+    tiempo_total = fin.elapsed - inicio.elapsed
+    
+    print(f"Tiempo de ejecución: {tiempo_total:.6f} segundos")
+    
     if solucion is None:
         return
 
