@@ -25,7 +25,7 @@ def comparar_columna(tablero, tablero_juego, j):
             return False
     return True
 
-def onClick(event, tablero_juego, i, j, casilla, tablero):
+def onClick(event, tablero_juego, i, j, casilla, tablero, ventana_principal):
     if tablero_juego == tablero:
         return
 
@@ -38,9 +38,9 @@ def onClick(event, tablero_juego, i, j, casilla, tablero):
     print(f"Celda actualizada a: {tablero_juego[i][j]}")
 
     if tablero_juego == tablero:
-        ventana_final()
+        ventana_final(ventana_principal)
 
-def resolver_aestrella(matriz_pistas_filas, matriz_pistas_columnas, tablero_juego,tablero):
+def resolver_aestrella(matriz_pistas_filas, matriz_pistas_columnas, tablero_juego,tablero, ventana_principal):
     inicio = os.times()
     
     solucion = A.aestrella(matriz_pistas_filas, matriz_pistas_columnas)
@@ -68,7 +68,7 @@ def resolver_aestrella(matriz_pistas_filas, matriz_pistas_columnas, tablero_jueg
             casilla, fill="black" if celda == "1" else "white"
         )
     if tablero_juego == tablero:
-        ventana_final()
+        ventana_final(ventana_principal)
 
 
 TAMANO_CASILLA = 11
@@ -180,14 +180,14 @@ def crear_tablero(tablero, tablero_juego, FILAS, COLUMNAS):
                 casilla,
                 "<Button-1>",
                 lambda event, i=fila, j=columna, item=casilla: onClick(
-                    event, tablero_juego, i, j, item, tablero
+                    event, tablero_juego, i, j, item, tablero, ventana
                 ),
             )
 
     tk.Button(
         ventana,
         text="Resolver",
-        command=lambda: resolver_aestrella(matriz_pistas_filas, matriz_pistas_columnas,tablero_juego,tablero)
+        command=lambda: resolver_aestrella(matriz_pistas_filas, matriz_pistas_columnas,tablero_juego,tablero, ventana)
     ).pack(pady=10)
 
     ventana.mainloop()
@@ -215,11 +215,16 @@ def ventana_inicial():
     ventana.mainloop()
     return seleccion.get()
 
-def ventana_final():
+def cerrar(ventana_principal):
+    ventana_principal.destroy()
+
+def ventana_final(ventana_principal):
     ventana = tk.Toplevel()
     ventana.title("¡Felicidades!")
     tk.Label(ventana, text="GANASTE!!!!1!!1!!!!!").pack(padx=20, pady=10)
-    tk.Button(ventana, text="Cerrar").pack(pady=10)
+    tk.Button(ventana, text="Cerrar", command=lambda: cerrar(ventana_principal)).pack(pady=10)
+    
+    
 
 def main():
     select = ventana_inicial()
